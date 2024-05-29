@@ -1,26 +1,35 @@
 #include <ncurses.h>
 #include <unistd.h>
-// #include <locale.h>
+#include <stdio.h>
 #include "SpaceShip.c"
 
 void DrawWindowLimits()
 {
-    for (int i = 2; i < 78; i++)
+    for (int i = 0; i < 80; i++)
     {
-        mvprintw(2, i, "%s", "_");
-        mvprintw(33, i, "%s", "_");
+        mvaddch(2, i, ACS_HLINE);
+        mvaddch(33, i, ACS_HLINE);
     }
     
-    for (int i = 4; i < 33; i++)
+    for (int i = 2; i < 34; i++)
     {
-        mvprintw(i, 2, "%s", "|");
-        mvprintw(i, 78, "%s", "|");
-    }
-    
+        mvaddch(i, 1, ACS_VLINE);
+        mvaddch(i, 78, ACS_VLINE);
+    } 
 }
 
-int main() {
-    // setlocale(LC_ALL, "");
+void Initialize(SpaceShip *spaceShip) 
+{
+    spaceShip->X = 38;
+    spaceShip->Y = 31;
+    spaceShip->Lifes = 3;
+    
+    DrawWindowLimits();
+    DrawSpaceShip(*spaceShip); 
+    DrawLifes(spaceShip);
+}
+
+int main() {    
     // Inicializa la pantalla de ncurses
     initscr();
     // Permite la captura de teclas especiales como las flechas del teclado
@@ -32,16 +41,13 @@ int main() {
 
     int ch;
     SpaceShip spaceShip;
-    spaceShip.X = 38;
-    spaceShip.Y = 31;
-    
-    DrawWindowLimits();
-    DrawSpaceShip(spaceShip);
+    Initialize(&spaceShip);
 
     // Bucle para capturar la entrada del teclado
     while((ch = getch()) != 27) { // Salir con ESC
         
         MovSpaceShip(&spaceShip, ch);
+        // DrawLifes(&spaceShip);
         
         // Refresca la pantalla para mostrar el cambio de posición 
         refresh();

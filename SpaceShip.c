@@ -1,10 +1,10 @@
-#include <stdio.h>
 #include <ncurses.h>
 
 typedef struct SpaceShip
 {
     int X;
     int Y;
+    int Lifes;
 } SpaceShip;
 
 void DrawSpaceShip(SpaceShip spaceShip)
@@ -42,7 +42,7 @@ void MovSpaceShip(SpaceShip *spaceShip, int ch)
             y = y < 31 ? y + 1 : y;
             break;
         case KEY_LEFT:
-            x = x > 3 ? x - 1 : x;
+            x = x > 2 ? x - 1 : x;
             break;
         case KEY_RIGHT:
             x = x < 72 ? x + 1 : x;
@@ -53,4 +53,13 @@ void MovSpaceShip(SpaceShip *spaceShip, int ch)
     spaceShip->X = x;
 
     DrawSpaceShip(*spaceShip);
+}
+
+void DrawLifes(SpaceShip *spaceShip)
+{
+    mvprintw(1, 64, "%s", "LIFES");
+    mvprintw(1, 70, "%s", "      ");
+
+    for (int i = 0; i < spaceShip->Lifes; i++)
+        mvprintw(1, 70 + i, "%s", "0");
 }
