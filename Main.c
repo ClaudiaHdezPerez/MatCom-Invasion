@@ -1,35 +1,46 @@
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <locale.h>
 #include "SpaceShip.c"
 
-void DrawWindowLimits()
+void DrawWindowLimits(int max_x, int max_y)
 {
-    for (int i = 0; i < 80; i++)
-    {
-        mvaddch(2, i, ACS_HLINE);
-        mvaddch(33, i, ACS_HLINE);
+    // Dibujar el marco
+
+    // Lados
+    for (int i = 2; i < (max_x - 1); i++) {
+        mvaddch(2, i, ACS_HLINE); // Superior
+        mvaddch(max_y - 1, i, ACS_HLINE); // Inferior
     }
-    
-    for (int i = 2; i < 34; i++)
-    {
-        mvaddch(i, 1, ACS_VLINE);
-        mvaddch(i, 78, ACS_VLINE);
-    } 
+
+    for (int i = 2; i < (max_y - 1); i++) {
+        mvaddch(i, 2, ACS_VLINE); // Izquierdo
+        mvaddch(i, max_x - 1, ACS_VLINE); // Derecho
+    }
+
+    // Esquinas
+    mvaddch(2, 2, ACS_ULCORNER);
+    mvaddch(2, max_x - 1, ACS_URCORNER);
+    mvaddch(max_y - 1, 2, ACS_LLCORNER);
+    mvaddch(max_y - 1, max_x - 1, ACS_LRCORNER);
+
+    //Presentacion
+    mvprintw(1, max_x / 2 - 5, "%s", "MATCOM INVASION");
 }
 
-void Initialize(SpaceShip *spaceShip) 
+void Initialize(SpaceShip *spaceShip, int x, int y) 
 {
-    spaceShip->X = 38;
-    spaceShip->Y = 31;
+    spaceShip->X = x / 2;
+    spaceShip->Y = y - 3;
     spaceShip->Lifes = 3;
-    
-    DrawWindowLimits();
+
+    DrawWindowLimits(x, y);
     DrawSpaceShip(*spaceShip); 
-    DrawLifes(spaceShip);
+    DrawLifes(spaceShip, x, y);
 }
 
-int main() {    
+int main() {  
+    setlocale(LC_ALL, "");  
     // Inicializa la pantalla de ncurses
     initscr();
     // Permite la captura de teclas especiales como las flechas del teclado
@@ -41,12 +52,17 @@ int main() {
 
     int ch;
     SpaceShip spaceShip;
-    Initialize(&spaceShip);
+
+    // Obtener el tamaño de la ventana de la terminal
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    Initialize(&spaceShip, max_x, max_y);
 
     // Bucle para capturar la entrada del teclado
     while((ch = getch()) != 27) { // Salir con ESC
         
-        MovSpaceShip(&spaceShip, ch);
+        MovSpaceShip(&spaceShip, ch, max_x, max_y);
         // DrawLifes(&spaceShip);
         
         // Refresca la pantalla para mostrar el cambio de posición 

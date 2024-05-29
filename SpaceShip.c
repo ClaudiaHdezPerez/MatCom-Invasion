@@ -1,4 +1,5 @@
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
+
 
 typedef struct SpaceShip
 {
@@ -11,23 +12,27 @@ void DrawSpaceShip(SpaceShip spaceShip)
 {
     char *str1 = "  /\\";
     char *str2 = "_//\\\\_";
+    // char *str1 = " /\\ ";
+    // char *str2 = "|==|";
+    // char *str3 = "/__\\";
 
-    // Muestra un "*" en la posición inicial
     mvprintw(spaceShip.Y, spaceShip.X, "%s", str1);
     mvprintw(spaceShip.Y + 1, spaceShip.X, "%s", str2);
+    // mvprintw(spaceShip.Y + 2, spaceShip.X, "%s", str3);
 }
 
 void EraseSpaceShip(SpaceShip spaceShip)
 {
     char *space1 = "    ";
-    char *space2 ="      ";
+    char *space2 = "      ";
+    // char *space3 = "    ";
 
-    // Muestra un "*" en la posición inicial
     mvprintw(spaceShip.Y, spaceShip.X, "%s", space1);
     mvprintw(spaceShip.Y + 1, spaceShip.X, "%s", space2);
+    // mvprintw(spaceShip.Y + 2, spaceShip.X, "%s", space3);
 }
 
-void MovSpaceShip(SpaceShip *spaceShip, int ch)
+void MovSpaceShip(SpaceShip *spaceShip, int ch, int max_x, int max_y)
 {
     EraseSpaceShip(*spaceShip);
 
@@ -36,16 +41,16 @@ void MovSpaceShip(SpaceShip *spaceShip, int ch)
 
     switch(ch) {
         case KEY_UP:
-            y = y > 20 ? y - 1 : y;
+            y = y > (max_y / 2) + 5 ? y - 1 : y;
             break;
         case KEY_DOWN:
-            y = y < 31 ? y + 1 : y;
+            y = y < (max_y - 3) ? y + 1 : y;
             break;
         case KEY_LEFT:
-            x = x > 2 ? x - 1 : x;
+            x = x > 3 ? x - 1 : x;
             break;
         case KEY_RIGHT:
-            x = x < 72 ? x + 1 : x;
+            x = x < (max_x - 7) ? x + 1 : x;
             break;
     }
 
@@ -55,11 +60,16 @@ void MovSpaceShip(SpaceShip *spaceShip, int ch)
     DrawSpaceShip(*spaceShip);
 }
 
-void DrawLifes(SpaceShip *spaceShip)
+void DrawLifes(SpaceShip *spaceShip, int max_x, int max_y)
 {
-    mvprintw(1, 64, "%s", "LIFES");
-    mvprintw(1, 70, "%s", "      ");
+    mvprintw(1, max_x - 17, "%s", "LIFES");
+    mvprintw(1, max_x - 10, "%s", "   ");
 
     for (int i = 0; i < spaceShip->Lifes; i++)
-        mvprintw(1, 70 + i, "%s", "0");
+    {    
+        // mvprintw(1, 70 + i, "%s", "0");
+        // waddch(ACS_HEART);
+        mvprintw(1, max_x - 10 + i, "%s", "♥");
+    }
+
 }
