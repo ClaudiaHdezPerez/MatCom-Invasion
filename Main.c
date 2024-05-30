@@ -65,6 +65,11 @@ int main() {
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
 
+        if (ch == 97)
+        {
+            Die(&spaceShip);
+        }
+
         if (new_y != max_y || new_x != max_x)
         {
             // DrawWindowLimits(max_x, max_y);
@@ -80,6 +85,7 @@ int main() {
         
         // Refresca la pantalla para mostrar el cambio de posición 
         refresh();
+        usleep(30000);
     }
 
     // Finaliza el programa de ncurses

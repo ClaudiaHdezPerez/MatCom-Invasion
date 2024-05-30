@@ -1,4 +1,5 @@
 #include <ncursesw/ncurses.h>
+#include <unistd.h>
 
 typedef struct SpaceShip
 {
@@ -22,7 +23,7 @@ void DrawSpaceShip(SpaceShip spaceShip)
 
 void EraseSpaceShip(SpaceShip spaceShip)
 {
-    char *space1 = "    ";
+    char *space1 = "      ";
     char *space2 = "      ";
     // char *space3 = "    ";
 
@@ -65,10 +66,27 @@ void DrawLifes(SpaceShip *spaceShip, int max_x, int max_y)
     mvprintw(1, max_x - 10, "%s", "      ");
 
     for (int i = 0; i < 2 * spaceShip->Lifes; i+=2)
-    {    
-        // mvprintw(1, 70 + i, "%s", "0");
-        // waddch(ACS_HEART);
         mvprintw(1, max_x - 10 + i, "%s", "♥");
-    }
+}
 
+void Die(SpaceShip *spaceShip)
+{
+    int y = spaceShip->Y;
+    int x = spaceShip->X;
+
+    EraseSpaceShip(*spaceShip);
+    mvprintw(y, x, "%s", "  **  ");
+    mvprintw(y + 1, x, "%s", "** * *");
+
+    refresh();
+    usleep(300000);
+    
+    EraseSpaceShip(*spaceShip);
+    mvprintw(y, x, "%s", " *   *");
+    mvprintw(y + 1, x, "%s", "   * *");
+
+    refresh();
+    usleep(300000);
+    EraseSpaceShip(*spaceShip);
+    DrawSpaceShip(*spaceShip);
 }
