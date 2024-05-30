@@ -61,9 +61,22 @@ int main() {
 
     // Bucle para capturar la entrada del teclado
     while((ch = getch()) != 27) { // Salir con ESC
-        
+
+        int new_x, new_y;
+        getmaxyx(stdscr, new_y, new_x);
+
+        if (new_y != max_y || new_x != max_x)
+        {
+            // DrawWindowLimits(max_x, max_y);
+            // DrawLifes(&spaceShip, max_x, max_y);
+            max_x = new_x;
+            max_y = new_y;
+
+            clear();
+            Initialize(&spaceShip, new_x, new_y);
+        }
+
         MovSpaceShip(&spaceShip, ch, max_x, max_y);
-        // DrawLifes(&spaceShip);
         
         // Refresca la pantalla para mostrar el cambio de posición 
         refresh();

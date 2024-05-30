@@ -1,6 +1,5 @@
 #include <ncursesw/ncurses.h>
 
-
 typedef struct SpaceShip
 {
     int X;
@@ -63,9 +62,9 @@ void MovSpaceShip(SpaceShip *spaceShip, int ch, int max_x, int max_y)
 void DrawLifes(SpaceShip *spaceShip, int max_x, int max_y)
 {
     mvprintw(1, max_x - 17, "%s", "LIFES");
-    mvprintw(1, max_x - 10, "%s", "   ");
+    mvprintw(1, max_x - 10, "%s", "      ");
 
-    for (int i = 0; i < spaceShip->Lifes; i++)
+    for (int i = 0; i < 2 * spaceShip->Lifes; i+=2)
     {    
         // mvprintw(1, 70 + i, "%s", "0");
         // waddch(ACS_HEART);
