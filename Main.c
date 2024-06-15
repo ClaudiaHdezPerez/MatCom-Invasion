@@ -1,7 +1,7 @@
-#include <ncursesw/ncurses.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <locale.h>
-#include "SpaceShip.c"
+#include "Engine.c"
 
 void DrawWindowLimits(int max_x, int max_y)
 {
@@ -30,13 +30,10 @@ void DrawWindowLimits(int max_x, int max_y)
 
 void Initialize(SpaceShip *spaceShip, int x, int y) 
 {
-    spaceShip->X = x / 2;
-    spaceShip->Y = y - 3;
-    spaceShip->Lifes = 3;
-
     DrawWindowLimits(x, y);
-    DrawSpaceShip(*spaceShip); 
     DrawLifes(spaceShip, x, y);
+
+    refresh();
 }
 
 int main() {  
@@ -50,46 +47,60 @@ int main() {
     // Oculta el cursor de la pantalla
     curs_set(0);
 
-    int ch;
+    pthread_mutex_init(&lock, NULL); // Inicializa el mutex
+
     SpaceShip spaceShip;
+    spaceShip.Lifes = 3;
+    spaceShip.game_over = 0;
+
+    pthread_t move;
+    pthread_t enemies;
+    pthread_t lifes;
 
     // Obtener el tamaño de la ventana de la terminal
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
 
+    spaceShip.X = max_x / 2;
+    spaceShip.Y = max_y - 3;
+
     Initialize(&spaceShip, max_x, max_y);
+    DrawSpaceShip(&spaceShip); 
+
+    DivideScreen();
+    // GenerateEnemies();
+
+    pthread_create(&enemies, NULL, &GenerateEnemies, (void*) &spaceShip);
+    pthread_create(&move, NULL, &MovSpaceShip, (void*) &spaceShip);
+    pthread_create(&lifes, NULL, &rr_scheduling, (void*) &spaceShip);
 
     // Bucle para capturar la entrada del teclado
-    while((ch = getch()) != 27) { // Salir con ESC
+    while(!spaceShip.game_over) { // Salir con ESC
 
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
 
-        if (ch == 97)
-        {
-            Die(&spaceShip);
-        }
-
         if (new_y != max_y || new_x != max_x)
         {
-            // DrawWindowLimits(max_x, max_y);
-            // DrawLifes(&spaceShip, max_x, max_y);
+            DivideScreen();
             max_x = new_x;
             max_y = new_y;
 
             clear();
-            Initialize(&spaceShip, new_x, new_y);
+            Initialize(&spaceShip, new_x, new_y);         
         }
 
-        MovSpaceShip(&spaceShip, ch, max_x, max_y);
-        
-        // Refresca la pantalla para mostrar el cambio de posición 
         refresh();
         usleep(30000);
     }
 
     // Finaliza el programa de ncurses
     endwin();
+    
+    free(pages);
+    pthread_join(move, NULL);
+    pthread_mutex_destroy(&lock); // Destruye el mutex al final del programa
+    pthread_mutex_destroy(&lock_lifes); // Destruye el mutex al final del programa
 
     return 0;
 }
