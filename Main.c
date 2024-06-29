@@ -1,9 +1,11 @@
-#include <unistd.h>
-#include <pthread.h>
 #include <locale.h>
+#include <ncursesw/ncurses.h>
 #include "Engine.c"
+#include "Score.c"
 
-void DrawWindowLimits(int max_x, int max_y)
+int record;
+
+void draw_window_limits(int max_x, int max_y)
 {
     // Dibujar el marco
 
@@ -28,15 +30,26 @@ void DrawWindowLimits(int max_x, int max_y)
     mvprintw(1, max_x / 2 - 5, "%s", "MATCOM INVASION");
 }
 
-void Initialize(SpaceShip *spaceShip, int x, int y) 
+void load_score_and_record(int x, int y)
 {
-    DrawWindowLimits(x, y);
-    DrawLifes(spaceShip, x, y);
+    mvprintw(1, 3, "%s", "SCORE: 0");
+    mvprintw(1, 18, "%s", "RECORD:");
+
+    record = get_record();
+    mvprintw(1, 26, "%d", record);
+}
+
+void initialize(SpaceShip *spaceShip, int x, int y) 
+{
+    draw_window_limits(x, y);
+    load_score_and_record(x, y);
+    draw_lifes(spaceShip, x, y);
 
     refresh();
 }
 
-int main() {  
+int main() 
+{  
     setlocale(LC_ALL, "");  
     // Inicializa la pantalla de ncurses
     initscr();
@@ -50,7 +63,7 @@ int main() {
     pthread_mutex_init(&lock, NULL); // Inicializa el mutex
 
     SpaceShip spaceShip;
-    spaceShip.Lifes = 3;
+    spaceShip.lifes = 3;
     spaceShip.game_over = 0;
 
     pthread_t move;
@@ -61,33 +74,38 @@ int main() {
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
 
-    spaceShip.X = max_x / 2;
-    spaceShip.Y = max_y - 3;
+    spaceShip.x = max_x / 2;
+    spaceShip.y = max_y - 3;
 
-    Initialize(&spaceShip, max_x, max_y);
-    DrawSpaceShip(&spaceShip); 
+    initialize(&spaceShip, max_x, max_y);
+    draw_spaceShip(&spaceShip); 
 
-    DivideScreen();
-    // GenerateEnemies();
-
-    pthread_create(&enemies, NULL, &GenerateEnemies, (void*) &spaceShip);
-    pthread_create(&move, NULL, &MovSpaceShip, (void*) &spaceShip);
+    divide_screen();
+    
+    pthread_create(&enemies, NULL, &generate_enemies, (void*) &spaceShip);
+    pthread_create(&move, NULL, &move_spaceShip, (void*) &spaceShip);
     pthread_create(&lifes, NULL, &rr_scheduling, (void*) &spaceShip);
 
     // Bucle para capturar la entrada del teclado
-    while(!spaceShip.game_over) { // Salir con ESC
+    while(!spaceShip.game_over) 
+    { // Salir con ESC
 
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
+        
+        mvprintw(1, 10, "%d", score);
+
+        if (score > record)
+            mvprintw(1, 26, "%d", score); 
 
         if (new_y != max_y || new_x != max_x)
         {
-            DivideScreen();
+            divide_screen();
             max_x = new_x;
             max_y = new_y;
 
             clear();
-            Initialize(&spaceShip, new_x, new_y);         
+            initialize(&spaceShip, new_x, new_y);         
         }
 
         refresh();
@@ -96,6 +114,8 @@ int main() {
 
     // Finaliza el programa de ncurses
     endwin();
+
+    set_record(score, record);
     
     free(pages);
     pthread_join(move, NULL);

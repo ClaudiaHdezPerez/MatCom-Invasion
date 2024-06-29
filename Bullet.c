@@ -1,7 +1,6 @@
-#include <ncursesw/ncurses.h>
-#include <time.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "Enemy.c"
+
+int score = 0;
 
 typedef struct Bullet {
     int x;
@@ -10,67 +9,125 @@ typedef struct Bullet {
     pthread_t thread_id;
 } Bullet;
 
-#define MAX_BULLETS 20
+Enemy enemies[MAX_ENEMIES];
+pthread_mutex_t lock; 
 
-pthread_mutex_t lock; // Declara el mutex
-
-void DrawBullet(Bullet bullet)
+void draw_bullet(Bullet bullet)
 {
-    pthread_mutex_lock(&lock); // Bloquea el mutex antes de dibujar
+    pthread_mutex_lock(&lock);
 
     int y = bullet.y;
     int x = bullet.x;
 
     mvprintw(y, x, "%s", "*");
     refresh();
-    pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+    pthread_mutex_unlock(&lock);
 }
 
-void EraseBullet(Bullet bullet)
+void increrase_score(Enemy enemy)
 {
-    pthread_mutex_lock(&lock); // Bloquea el mutex antes de borrar
+    switch (enemy.color)
+    {
+        case COLOR_YELLOW:
+            score++;
+            break;
+        
+        case COLOR_CYAN:
+            score += 3;
+            break;
+
+        case COLOR_RED:
+            score += 5;
+            break;
+
+        default:
+            score += 15;
+            break;
+    }
+}
+
+void erase_bullet(Bullet bullet)
+{
+    pthread_mutex_lock(&lock);
     
     int y = bullet.y;
     int x = bullet.x;
     
     mvprintw(y, x, "%s", " ");
     refresh();
-    pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+    pthread_mutex_unlock(&lock); 
 }
 
-Bullet bullets[MAX_BULLETS];
+void colision(Bullet *bullet)
+{
+    for (int i = 0; i < MAX_ENEMIES; i++)
+    {
+        if (bullet->x <= enemies[i].x + enemies[i].width && bullet->x >= enemies[i].x
+        && bullet->y <= enemies[i].y + 2 && enemies[i].active)
+        {
+            enemies[i].lifes--;
+
+            int y = enemies[i].y;
+            int x = enemies[i].x;
+
+            start_color();
+
+            use_default_colors();
+
+            init_pair(enemies[i].number, enemies[i].color, -1);
+
+            attron(COLOR_PAIR(enemies[i].number));
+
+            erase_enemy(enemies[i]);
+            mvprintw(enemies[i].y, enemies[i].x, "%s", "** ");
+
+            refresh();
+            attroff(COLOR_PAIR(enemies[i].number));
+
+            usleep(200000);
+            
+            attron(COLOR_PAIR(enemies[i].number));
+            
+            erase_enemy(enemies[i]);
+            mvprintw(enemies[i].y, enemies[i].x, "%s", " * ");
+
+            refresh();
+            attroff(COLOR_PAIR(enemies[i].number));
+            usleep(200000);
+            erase_enemy(enemies[i]);
+            draw_enemy(enemies[i]);
+            
+            refresh();
+
+            if (enemies[i].lifes <= 0)
+            {
+                erase_enemy(enemies[i]);
+                enemies[i].active = 0;
+                increrase_score(enemies[i]);
+            }
+
+            bullet->active = 0;
+            return;
+        }
+    }
+}
 
 void* bullet_thread(void* arg) 
 {
     Bullet* bullet = (Bullet*)arg;
     while(bullet->active) {
-        EraseBullet(*bullet);
+        erase_bullet(*bullet);
         bullet->y--;
-        DrawBullet(*bullet);
+        colision(bullet);
+        draw_bullet(*bullet);
+
+        if(bullet->y <= 3 || !bullet->active) {
+            bullet->active = 0;
+            erase_bullet(*bullet);
+        }
 
         usleep(50000);
-        if(bullet->y <= 3) {
-            bullet->active = 0;
-            EraseBullet(*bullet);
-        }
     }
     
     pthread_exit(NULL);
-}
-
-void fire_bullet(int x, int y) 
-{
-    for(int i = 0; i < MAX_BULLETS; i++) 
-    {
-        if(!bullets[i].active) 
-        {
-            bullets[i].x = x;
-            bullets[i].y = y;
-            bullets[i].active = 1;
-            pthread_t thread_id;
-            bullets[i].thread_id = thread_id;
-            pthread_create(&thread_id, NULL, bullet_thread, &bullets[i]);
-            break;
-        }
-    }
 }
