@@ -79,7 +79,9 @@ void colision(Bullet *bullet)
             attron(COLOR_PAIR(enemies[i].number));
 
             erase_enemy(enemies[i]);
+            pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
             mvprintw(enemies[i].y, enemies[i].x, "%s", "** ");
+            pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 
             refresh();
             attroff(COLOR_PAIR(enemies[i].number));
@@ -89,7 +91,9 @@ void colision(Bullet *bullet)
             attron(COLOR_PAIR(enemies[i].number));
             
             erase_enemy(enemies[i]);
+            pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
             mvprintw(enemies[i].y, enemies[i].x, "%s", " * ");
+            pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 
             refresh();
             attroff(COLOR_PAIR(enemies[i].number));

@@ -1,5 +1,6 @@
 #include <locale.h>
-#include <ncursesw/ncurses.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "Engine.c"
 #include "Score.c"
 
@@ -8,6 +9,8 @@ int record;
 void draw_window_limits(int max_x, int max_y)
 {
     // Dibujar el marco
+
+    pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
 
     // Lados
     for (int i = 2; i < (max_x - 1); i++) {
@@ -28,15 +31,18 @@ void draw_window_limits(int max_x, int max_y)
 
     //Presentacion
     mvprintw(1, max_x / 2 - 5, "%s", "MATCOM INVASION");
+    pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 }
 
 void load_score_and_record(int x, int y)
 {
+    pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
     mvprintw(1, 3, "%s", "SCORE: 0");
     mvprintw(1, 18, "%s", "RECORD:");
 
     record = get_record();
     mvprintw(1, 26, "%d", record);
+    pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 }
 
 void initialize(SpaceShip *spaceShip, int x, int y) 
@@ -48,8 +54,7 @@ void initialize(SpaceShip *spaceShip, int x, int y)
     refresh();
 }
 
-int main() 
-{  
+int main() {  
     setlocale(LC_ALL, "");  
     // Inicializa la pantalla de ncurses
     initscr();
@@ -69,6 +74,31 @@ int main()
     pthread_t move;
     pthread_t enemies;
     pthread_t lifes;
+
+    // Inicializar SDL
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        printf("Error al inicializar SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    // Inicializar SDL_mixer
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        printf("Error al inicializar SDL_mixer: %s\n", Mix_GetError());
+        return 1;
+    }
+
+    // Cargar el efecto de sonido
+    Mix_Chunk* efecto = Mix_LoadWAV("planckx27s-constant-la-constante-de-planck-127554.wav");
+    if (efecto == NULL) {
+        printf("Error al cargar el efecto de sonido: %s\n", Mix_GetError());
+        return 1;
+    }
+
+    // Reproducir el efecto de sonido
+    Mix_PlayChannel(-1, efecto, 0);
+
+    // Esperar para que el sonido tenga tiempo de reproducirse
+    SDL_Delay(2000);
 
     // Obtener el tamaño de la ventana de la terminal
     int max_y, max_x;
@@ -93,10 +123,16 @@ int main()
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
         
+        pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
         mvprintw(1, 10, "%d", score);
+        pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 
         if (score > record)
-            mvprintw(1, 26, "%d", score); 
+        {
+            pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
+            mvprintw(1, 26, "%d", score);
+            pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+        }
 
         if (new_y != max_y || new_x != max_x)
         {
@@ -114,6 +150,11 @@ int main()
 
     // Finaliza el programa de ncurses
     endwin();
+
+    // Limpiar sonido
+    Mix_FreeChunk(efecto);
+    Mix_CloseAudio();
+    SDL_Quit();
 
     set_record(score, record);
     
