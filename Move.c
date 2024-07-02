@@ -9,15 +9,16 @@ void colision_spaceShip_enemy(SpaceShip *spaceShip, Enemy *enemy)
     int x = spaceShip->x;
     int y = spaceShip->y;
 
-    if (!spaceShip->game_over && enemy->active && 
-    (enemy->x <= x + 7    && enemy->x >= x     && enemy->y >= y - 2  ||
-    enemy->x + 1 <= x + 7 && enemy->x + 1 >= x && enemy->y >= y - 2  ||
-    enemy->x + 2 <= x + 7 && enemy->x + 2 >= x && enemy->y >= y - 2  ||
-    enemy->x + 3 <= x + 7 && enemy->x + 3 >= x && enemy->y >= y - 2))
+    for (int i = 0; i <= enemy->width; i++)
     {
-        enemy->active = 0;
-        erase_enemy(*enemy);
-        die(spaceShip, max_x1, max_y1);
+        if (!spaceShip->game_over && enemy->active && 
+        enemy->x + i <= x + 7 && enemy->x + i >= x && enemy->y >= y - 2)
+        {
+            enemy->lifes = 0;
+            erase_enemy(*enemy);
+            die(spaceShip, max_x1, max_y1);
+            break;
+        }
     }
 }
 
