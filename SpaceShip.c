@@ -95,4 +95,3 @@ void die(SpaceShip *spaceShip, int max_x, int max_y)
     spaceShip->lifes--;
     draw_lifes(spaceShip, max_x, max_y);
 }
-
