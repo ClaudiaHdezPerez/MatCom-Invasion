@@ -118,8 +118,7 @@ int main() {
 
     // Bucle para capturar la entrada del teclado
     while(!spaceShip.game_over) 
-    { // Salir con ESC
-
+    { 
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
         
@@ -161,8 +160,8 @@ int main() {
     
     free(pages);
 
-    pthread_mutex_destroy(&lock); // Destruye el mutex al final del programa
-    pthread_mutex_destroy(&lock_lifes); // Destruye el mutex al final del programa
+    pthread_mutex_destroy(&lock); 
+    pthread_mutex_destroy(&lock_lifes); 
     pthread_mutex_destroy(&lock_spaceShip);
 
     return 0;

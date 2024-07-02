@@ -1,12 +1,13 @@
 #include "Enemy.c"
 
 int score = 0;
+int big_enemy;
+int active = 0;
 
 typedef struct Bullet {
     int x;
     int y;
     int active;
-    pthread_t thread_id;
 } Bullet;
 
 Enemy enemies[MAX_ENEMIES];
@@ -60,10 +61,18 @@ void erase_bullet(Bullet bullet)
 
 void colision(Bullet *bullet)
 {
+    int heigth = 2;
+
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
+        if (big_enemy && enemies[MAX_ENEMIES - 1].active)
+        {
+            i = MAX_ENEMIES - 1;
+            heigth = 5;
+        }
+
         if (bullet->x <= enemies[i].x + enemies[i].width && bullet->x >= enemies[i].x
-        && bullet->y <= enemies[i].y + 2 && enemies[i].active)
+        && bullet->y <= enemies[i].y + heigth && enemies[i].active)
         {
             enemies[i].lifes--;
 
@@ -79,9 +88,9 @@ void colision(Bullet *bullet)
             attron(COLOR_PAIR(enemies[i].number));
 
             erase_enemy(enemies[i]);
-            pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
+            pthread_mutex_lock(&lock); 
             mvprintw(enemies[i].y, enemies[i].x, "%s", "** ");
-            pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+            pthread_mutex_unlock(&lock); 
 
             refresh();
             attroff(COLOR_PAIR(enemies[i].number));
@@ -91,9 +100,9 @@ void colision(Bullet *bullet)
             attron(COLOR_PAIR(enemies[i].number));
             
             erase_enemy(enemies[i]);
-            pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
+            pthread_mutex_lock(&lock); 
             mvprintw(enemies[i].y, enemies[i].x, "%s", " * ");
-            pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+            pthread_mutex_unlock(&lock); 
 
             refresh();
             attroff(COLOR_PAIR(enemies[i].number));
@@ -107,7 +116,12 @@ void colision(Bullet *bullet)
             {
                 erase_enemy(enemies[i]);
                 enemies[i].active = 0;
-                increrase_score(enemies[i]);
+
+                if (!enemies[i].killed)
+                {
+                    increrase_score(enemies[i]);
+                    enemies[i].killed = 1;
+                }
             }
 
             bullet->active = 0;

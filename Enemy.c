@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "SpaceShip.c"
 
-#define MAX_ENEMIES 20
+#define MAX_ENEMIES 21
 
 typedef struct Page {
     int start;
@@ -17,7 +17,7 @@ typedef struct Enemy {
     int color;
     int active;
     int number;
-    int block;
+    int killed;
     Page *page;
 } Enemy;
 
@@ -45,10 +45,13 @@ void draw_enemy(Enemy enemy)
 
     if (enemy.color == COLOR_GREEN)
     {
+        char str[12];
+        sprintf(str, "     %d    ", enemy.lifes); 
         mvprintw(y, x, "%s", "    \\ /   ");
         mvprintw(y + 1, x, "%s", "  \\(-_-)/ ");
         mvprintw(y + 2, x, "%s", "   (___)  ");
         mvprintw(y + 3, x, "%s", "   /   \\ ");
+        mvprintw(y + 4, x, "%s", str);
     }
 
     else
@@ -78,6 +81,7 @@ void erase_enemy(Enemy enemy)
         mvprintw(y + 1, x, "%s", "          ");
         mvprintw(y + 2, x, "%s", "          "); 
         mvprintw(y + 3, x, "%s", "         ");
+        mvprintw(y + 4, x, "%s", "         ");
     }
 
     else
