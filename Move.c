@@ -6,15 +6,14 @@ Bullet bullets[MAX_BULLETS];
 
 void colision_spaceShip_enemy(SpaceShip *spaceShip, Enemy *enemy)
 {
+    int x = spaceShip->x;
+    int y = spaceShip->y;
+
     if (!spaceShip->game_over && enemy->active && 
-    (enemy->x <= spaceShip->x + 7 && enemy->x >= spaceShip->x
-    && enemy->y >= spaceShip->y - 2  ||
-    enemy->x + 1 <= spaceShip->x + 7 && enemy->x + 1 >= spaceShip->x
-    && enemy->y >= spaceShip->y - 2  ||
-    enemy->x + 2 <= spaceShip->x + 7 && enemy->x + 2 >= spaceShip->x
-    && enemy->y >= spaceShip->y - 2  ||
-    enemy->x + 3 <= spaceShip->x + 7 && enemy->x + 3 >= spaceShip->x
-    && enemy->y >= spaceShip->y - 2))
+    (enemy->x <= x + 7    && enemy->x >= x     && enemy->y >= y - 2  ||
+    enemy->x + 1 <= x + 7 && enemy->x + 1 >= x && enemy->y >= y - 2  ||
+    enemy->x + 2 <= x + 7 && enemy->x + 2 >= x && enemy->y >= y - 2  ||
+    enemy->x + 3 <= x + 7 && enemy->x + 3 >= x && enemy->y >= y - 2))
     {
         enemy->active = 0;
         erase_enemy(*enemy);
@@ -57,7 +56,6 @@ void* move_enemy(void* arg)
             if(enemy->y > max_y1 - 4 || !enemy->active) {
                 enemy->active = 0;
                 enemy->page->age++;
-                enemy->page->capacity += enemy->lifes;
                 erase_enemy(*enemy);
                 use_enemy = 0;
                 break;
@@ -68,10 +66,13 @@ void* move_enemy(void* arg)
     pthread_exit(NULL);
 }
 
-void fire_bullet(int x, int y) 
+void fire_bullet(SpaceShip *spaceShip, int x, int y) 
 {
     for(int i = 0; i < MAX_BULLETS; i++) 
     {
+        if (spaceShip->game_over)
+            break;
+
         if(!bullets[i].active) 
         {
             bullets[i].x = x;
@@ -104,8 +105,10 @@ void* move_spaceShip(void* arg)
 
             erase_spaceShip(spaceShip);
 
+            pthread_mutex_lock(&lock_spaceShip);
             spaceShip->x = max_x / 2;
             spaceShip->y = max_y - 3;  
+            pthread_mutex_unlock(&lock_spaceShip);
 
             draw_spaceShip(spaceShip);    
         }
@@ -116,6 +119,7 @@ void* move_spaceShip(void* arg)
         int ch = getch();
         if (ch != ERR) // Solo procesa la entrada si se presionó una tecla
         {  
+            pthread_mutex_lock(&lock_spaceShip);
             switch(ch) 
             {
                 case KEY_UP:
@@ -134,19 +138,22 @@ void* move_spaceShip(void* arg)
                     spaceShip->game_over = 1;
                     break;
                 case ' ':
-                    fire_bullet(spaceShip->x + 2, spaceShip->y - 1);
+                    fire_bullet(spaceShip, spaceShip->x + 2, spaceShip->y - 1);
                     break;
             }
 
+            pthread_mutex_unlock(&lock_spaceShip);
+
             erase_spaceShip(spaceShip);
 
+            pthread_mutex_lock(&lock_spaceShip);
             spaceShip->y = y;
             spaceShip->x = x;
+            pthread_mutex_unlock(&lock_spaceShip);
 
             draw_spaceShip(spaceShip);
         }     
     }
     
-    sleep(2);
     pthread_exit(NULL);
 }

@@ -14,11 +14,11 @@ int lifes[4];
 void divide_screen()
 {
     srand(time(NULL)); 
-    int max_x = getmaxx(stdscr);
-    max_x -= 4;
+    int max_x2 = getmaxx(stdscr);
+    max_x2 -= 4;
 
     int width_page = 7;
-    total_pages = max_x / width_page;
+    total_pages = max_x2 / width_page;
     
     int start_page = 2; 
 
@@ -39,20 +39,25 @@ int max(int num1, int num2)
     return (num1 > num2 ) ? num1 : num2;
 }
 
-Page* older_page(Enemy *enemy) // LRU
+Page* older_page(Enemy *enemy, SpaceShip *spaceShip) // LRU
 {
     Page *older = NULL;
  
     for (int i = 0; i < total_pages; i++)
     {      
+        if (spaceShip->game_over)
+        {
+            older = NULL;
+            break;
+        }
+
         int older_;  
-        if (older != NULL)
+        if (older == NULL)
+            older = &pages[i];
+        else
             older_ = max(pages[i].age, older->age);
 
-        if (older == NULL && pages[i].capacity <= enemy->lifes)
-            older = &pages[i];
-
-        if (older_ == pages[i].age && pages[i].capacity <= enemy->lifes)
+        if (older_ == pages[i].age)
             older = &pages[i];
 
         pages[i].age++;   
@@ -72,6 +77,8 @@ void* generate_enemies(void* arg)
 
     while (!spaceShip->game_over)
     {
+        usleep(1000000);
+
         for (int i = 0; i < MAX_ENEMIES; i++)
         {
             if (spaceShip->game_over)
@@ -79,7 +86,7 @@ void* generate_enemies(void* arg)
                 
             if(!enemies[i].active) 
             {
-                Page *old = older_page(&enemies[i]);
+                Page *old = older_page(&enemies[i], spaceShip);
 
                 if (old != NULL)
                 {
@@ -92,7 +99,6 @@ void* generate_enemies(void* arg)
                     pthread_mutex_unlock(&lock_lifes); 
 
                     enemies[i].page = old;
-                    enemies[i].page->capacity -= enemies[i].lifes;
                     enemies[i].number = i + 1;
                     enemies[i].block = 0;
 
@@ -129,8 +135,6 @@ void* generate_enemies(void* arg)
                 }
             }
         }
-
-        usleep(1000000);
     }
 
     pthread_exit(NULL);
@@ -149,7 +153,11 @@ void* rr_scheduling(void* arg)
     int index_enemies_lifes = 0;
 
     while (!spaceShip->game_over) {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) 
+        {
+            if (spaceShip->game_over)
+                break;
+
             if (lifes[i] <= time) 
             {
                 if (i != 0)

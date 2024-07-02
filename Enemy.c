@@ -7,7 +7,6 @@ typedef struct Page {
     int start;
     int width;
     int age;
-    int capacity;
 } Page;
 
 typedef struct Enemy {
