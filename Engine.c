@@ -1,4 +1,20 @@
+<<<<<<< HEAD
 #include "Utils.h"
+=======
+#include "Move.c"
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+pthread_mutex_t lock_lifes; // Declara el mutex
+
+Page *pages;
+int total_pages = 0;
+
+int enemies_lifes[MAX_ENEMIES];
+int count;
+int lifes[4];
+>>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 
 void divide_screen()
 {
@@ -28,7 +44,11 @@ int max(int num1, int num2)
     return (num1 > num2 ) ? num1 : num2;
 }
 
+<<<<<<< HEAD
 Page* older_page(SpaceShip *spaceShip) // LRU
+=======
+Page* older_page(Enemy *enemy, SpaceShip *spaceShip) // LRU
+>>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 {
     Page *older = NULL;
  
@@ -90,7 +110,11 @@ void* generate_enemies(void* arg)
                     
                 if(!enemies[i].active) 
                 {
+<<<<<<< HEAD
                     Page *old = older_page(spaceShip);
+=======
+                    Page *old = older_page(&enemies[i], spaceShip);
+>>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 
                     if (old != NULL)
                     {
