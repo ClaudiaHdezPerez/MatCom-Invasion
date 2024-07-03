@@ -1,10 +1,25 @@
-#include <locale.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include "Engine.c"
-#include "Score.c"
+#include "Utils.h"
+#include "Score.h"
 
+#pragma region Definitions
 int record;
+int score;
+int max_x1, max_y1;
+int score = 0;
+int big_enemy;
+int active = 0;
+int total_pages = 0;
+int enemies_lifes[MAX_ENEMIES];
+int count;
+int lifes[4];
+pthread_mutex_t lock;
+pthread_mutex_t lock_lifes;
+pthread_mutex_t lock_spaceShip;
+Bullet_Enemy enemy_bullets[ENEMY_BULLETS];
+Enemy enemies[MAX_ENEMIES];
+Bullet bullets[MAX_BULLETS];
+Page *pages;
+#pragma endregion
 
 void draw_window_limits(int max_x, int max_y)
 {
@@ -34,7 +49,7 @@ void draw_window_limits(int max_x, int max_y)
     pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 }
 
-void load_score_and_record(int x, int y)
+void load_score_and_record()
 {
     pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
     mvprintw(1, 3, "%s", "SCORE: 0");
@@ -48,8 +63,8 @@ void load_score_and_record(int x, int y)
 void initialize(SpaceShip *spaceShip, int x, int y) 
 {
     draw_window_limits(x, y);
-    load_score_and_record(x, y);
-    draw_lifes(spaceShip, x, y);
+    load_score_and_record();
+    draw_lifes(spaceShip, x);
 
     refresh();
 }
@@ -72,7 +87,7 @@ int main() {
     spaceShip.game_over = 0;
 
     pthread_t move;
-    pthread_t enemies;
+    pthread_t enemies_t;
     pthread_t lifes;
 
     // Inicializar SDL
@@ -112,14 +127,13 @@ int main() {
 
     divide_screen();
     
-    pthread_create(&enemies, NULL, &generate_enemies, (void*) &spaceShip);
+    pthread_create(&enemies_t, NULL, &generate_enemies, (void*) &spaceShip);
     pthread_create(&move, NULL, &move_spaceShip, (void*) &spaceShip);
     pthread_create(&lifes, NULL, &rr_scheduling, (void*) &spaceShip);
 
     // Bucle para capturar la entrada del teclado
     while(!spaceShip.game_over) 
-    { // Salir con ESC
-
+    { 
         int new_x, new_y;
         getmaxyx(stdscr, new_y, new_x);
         
@@ -136,6 +150,7 @@ int main() {
 
         if (new_y != max_y || new_x != max_x)
         {
+            free(pages);
             divide_screen();
             max_x = new_x;
             max_y = new_y;
@@ -159,9 +174,10 @@ int main() {
     set_record(score, record);
     
     free(pages);
-    pthread_join(move, NULL);
-    pthread_mutex_destroy(&lock); // Destruye el mutex al final del programa
-    pthread_mutex_destroy(&lock_lifes); // Destruye el mutex al final del programa
+
+    pthread_mutex_destroy(&lock); 
+    pthread_mutex_destroy(&lock_lifes); 
+    pthread_mutex_destroy(&lock_spaceShip);
 
     return 0;
 }

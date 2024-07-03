@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\title{Matcom Invasion}
+\author{Claudia Herández Pérez \&\& Joel Aparicio Tamayo}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{OIG2.Ym9.jpeg}
+    \caption{Ojalá se viera así, pero no, es en consola :(}
+\end{figure}
+
+\section{Introducción}
+En este informe, se detalla la implementación de un juego de arcade clásico en lenguaje C, Space Invaders, 
+con características modernas como multi-disparos, manejo de múltiples enemigos, y una experiencia de usuario interactiva.
+
+\section{Arquitectura del Juego}
+\subsection{Multi-Hilos}
+El juego implementa hilos para permitir el disparo simultáneo y la gestión de varios enemigos en pantalla, usando un hilo
+individual para cada bala y para cada enemigo.
+
+\subsection{Algoritmo de Reemplazo de Páginas}
+Se utiliza un algoritmo de reemplazo de páginas para determinar dinámicamente la posición de los enemigos en la pantalla, 
+es decir, para tomar la decisión de por que sitio de la pantalla fueran apareciendo.
+
+\section{Programación Orientada a Eventos}
+La interacción del usuario con el juego se maneja a través de eventos, específicamente el 
+reconocimiento de teclas para mover la nave y disparar. Para esto se usó la biblioteca ncurses y 
+en específico la función getch();
+
+\section{Scheduling}
+Se aplica Round Robin (RR) algoritmo de scheduling para asignar y decidir la cantidad de vidas de los enemigos dado que 
+los enemigos pueden tener 1, 3 o 5 vidas, y un caso especial, 15 vidas.
+
+\section{Multimedia}
+\subsection{Música}
+El juego incluye una banda sonora que mejora la experiencia del usuario.
+
+\subsection{Guardado de Records}
+Los puntajes altos se guardan en un archivo \texttt{.txt} para mantener un registro de los logros del jugador.
+
+\end{document}
