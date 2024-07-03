@@ -64,11 +64,7 @@ void initialize(SpaceShip *spaceShip, int x, int y)
 {
     draw_window_limits(x, y);
     load_score_and_record();
-<<<<<<< HEAD
     draw_lifes(spaceShip, x);
-=======
-    draw_lifes(spaceShip, x, y);
->>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 
     refresh();
 }

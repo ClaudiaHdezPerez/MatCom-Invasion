@@ -1,21 +1,7 @@
 #include "Utils.h"
 
-<<<<<<< HEAD
 // extern pthread_mutex_t lock;
 // extern pthread_mutex_t lock_spaceShip;
-=======
-pthread_mutex_t lock_spaceShip;
-
-typedef struct SpaceShip
-{
-    int x;
-    int y;
-    int lifes;
-    int game_over;
-} SpaceShip;
-
-pthread_mutex_t lock;
->>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 
 void draw_spaceShip(SpaceShip *spaceShip)
 {
@@ -168,9 +154,5 @@ void die(SpaceShip *spaceShip, int max_x, int max_y)
     }
 
     spaceShip->lifes--;
-<<<<<<< HEAD
     draw_lifes(spaceShip, max_x);
-=======
-    draw_lifes(spaceShip, max_x, max_y);
->>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 }

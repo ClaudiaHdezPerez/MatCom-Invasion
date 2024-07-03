@@ -1,36 +1,7 @@
 #include "Utils.h"
 
-<<<<<<< HEAD
 // extern int max_x1, max_y1;
 // extern pthread_mutex_t lock;
-=======
-#define MAX_ENEMIES 21
-
-typedef struct Page {
-    int start;
-    int width;
-    int age;
-} Page;
-
-typedef struct Enemy {
-    int x;
-    int y;
-    int width;
-    int lifes;
-    int color;
-    int active;
-    int number;
-    int killed;
-    Page *page;
-} Enemy;
-
-typedef struct enemies_thread {
-    Enemy *enemy;
-    SpaceShip *spaceShip;
-} enemies_thread;
-
-int max_x1, max_y1;
->>>>>>> 34c491be860adbe943c3da35ac855e1a67c41cf0
 
 void draw_enemy(Enemy enemy)
 {
