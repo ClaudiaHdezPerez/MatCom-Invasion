@@ -1,32 +1,4 @@
-#include <stdio.h>
-#include "SpaceShip.c"
-
-#define MAX_ENEMIES 21
-
-typedef struct Page {
-    int start;
-    int width;
-    int age;
-} Page;
-
-typedef struct Enemy {
-    int x;
-    int y;
-    int width;
-    int lifes;
-    int color;
-    int active;
-    int number;
-    int killed;
-    Page *page;
-} Enemy;
-
-typedef struct enemies_thread {
-    Enemy *enemy;
-    SpaceShip *spaceShip;
-} enemies_thread;
-
-int max_x1, max_y1;
+#include "Utils.h"
 
 void draw_enemy(Enemy enemy)
 {
@@ -92,4 +64,118 @@ void erase_enemy(Enemy enemy)
 
     refresh();
     pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
+}
+
+void* move_enemy(void* arg)
+{
+    getmaxyx(stdscr, max_y1, max_x1);
+
+    enemies_thread *struct_thread_enemy = (enemies_thread*)arg;
+    Enemy *enemy = struct_thread_enemy->enemy;
+    SpaceShip *spaceShip = struct_thread_enemy->spaceShip;
+
+    int x = enemy->x;
+    int use_enemy = 1;
+
+    while(use_enemy && !spaceShip->game_over) {
+        if (enemy->color == COLOR_GREEN)
+        {
+            int count = 0;
+            for (int i = 2; i < (max_y1 - 1); i++) {
+                srand(time(NULL)); 
+
+                erase_enemy(*enemy);
+                int width_screen = max_x1 - 15;
+                enemy->x = (rand() % width_screen) + 3;
+
+                if (enemy->x + i + 11 >= max_x1 - 1)
+                    break;
+                    
+                if (spaceShip->game_over)
+                    break;
+
+                bullet_big_enemy(enemy, spaceShip);
+
+                count++;
+                if (count == 2)
+                {
+                    count = 0;
+                    enemy->y++;
+                }
+
+                draw_enemy(*enemy);
+
+                usleep(400000);
+
+                for (int i = 0; i < 5; i++)
+                {
+                    if (enemy->x + i + 11 >= max_x1 - 1)
+                        break;
+
+                    if (spaceShip->game_over)
+                        break;
+
+                    erase_enemy(*enemy);
+
+                    enemy->x++;
+
+                    draw_enemy(*enemy);
+
+                    usleep(300000);
+                }
+
+                colision_spaceShip_enemy(spaceShip, enemy);
+
+                if(enemy->lifes <= 0) {
+                    enemy->active = 0;
+                    erase_enemy(*enemy);
+                    use_enemy = 0;
+                    big_enemy = 0;
+                    active = 0;
+                    break;
+                }
+
+                if (enemy->y > max_y1 - 12)
+                {
+                    spaceShip->lifes = 0;
+                    die(spaceShip, max_x1, max_y1);
+                    break;
+                }
+            }
+        }
+
+        else
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (spaceShip->game_over)
+                    break;
+
+                erase_enemy(*enemy);
+                enemy->x++;
+
+                if (i == 2)
+                {
+                    enemy->y++;
+                    enemy->x = x;
+                } 
+
+                draw_enemy(*enemy);
+
+                usleep(200000);
+
+                colision_spaceShip_enemy(spaceShip, enemy);
+
+                if(enemy->y > max_y1 - 4 || !enemy->active || enemy->lifes <= 0) {
+                    enemy->active = 0;
+                    enemy->page->age++;
+                    erase_enemy(*enemy);
+                    use_enemy = 0;
+                    break;
+                }
+            }
+        }
+    }
+    
+    pthread_exit(NULL);
 }

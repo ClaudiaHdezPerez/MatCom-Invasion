@@ -1,10 +1,25 @@
-#include <locale.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include "Engine.c"
-#include "Score.c"
+#include "Utils.h"
+#include "Score.h"
 
+#pragma region Definitions
 int record;
+int score;
+int max_x1, max_y1;
+int score = 0;
+int big_enemy;
+int active = 0;
+int total_pages = 0;
+int enemies_lifes[MAX_ENEMIES];
+int count;
+int lifes[4];
+pthread_mutex_t lock;
+pthread_mutex_t lock_lifes;
+pthread_mutex_t lock_spaceShip;
+Bullet_Enemy enemy_bullets[ENEMY_BULLETS];
+Enemy enemies[MAX_ENEMIES];
+Bullet bullets[MAX_BULLETS];
+Page *pages;
+#pragma endregion
 
 void draw_window_limits(int max_x, int max_y)
 {
@@ -49,7 +64,7 @@ void initialize(SpaceShip *spaceShip, int x, int y)
 {
     draw_window_limits(x, y);
     load_score_and_record();
-    draw_lifes(spaceShip, x, y);
+    draw_lifes(spaceShip, x);
 
     refresh();
 }

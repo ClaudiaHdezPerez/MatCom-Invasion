@@ -1,16 +1,4 @@
-#include "Move.c"
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-pthread_mutex_t lock_lifes; // Declara el mutex
-
-Page *pages;
-int total_pages = 0;
-
-int enemies_lifes[MAX_ENEMIES];
-int count;
-int lifes[4];
+#include "Utils.h"
 
 void divide_screen()
 {
@@ -28,7 +16,6 @@ void divide_screen()
     {
         pages[i].start = start_page;
         pages[i].width = width_page;
-        pages[i].age = rand() % 2;
         pages[i].age = (rand() % 5) + 1;
 
         start_page += width_page;
@@ -40,7 +27,7 @@ int max(int num1, int num2)
     return (num1 > num2 ) ? num1 : num2;
 }
 
-Page* older_page(Enemy *enemy, SpaceShip *spaceShip) // LRU
+Page* older_page(SpaceShip *spaceShip) // LRU
 {
     Page *older = NULL;
  
@@ -52,13 +39,13 @@ Page* older_page(Enemy *enemy, SpaceShip *spaceShip) // LRU
             break;
         }
 
-        int older_;  
+        int older_age;  
         if (older == NULL)
             older = &pages[i];
         else
-            older_ = max(pages[i].age, older->age);
+            older_age = max(pages[i].age, older->age);
 
-        if (older_ == pages[i].age)
+        if (older_age == pages[i].age)
             older = &pages[i];
 
         pages[i].age++;   
@@ -102,19 +89,19 @@ void* generate_enemies(void* arg)
                     
                 if(!enemies[i].active) 
                 {
-                    Page *old = older_page(&enemies[i], spaceShip);
+                    Page *page = older_page(spaceShip);
 
-                    if (old != NULL)
+                    if (page != NULL)
                     {
                         enemies[i].active = 1;
-                        enemies[i].x = old->start + 1;
+                        enemies[i].x = page->start + 1;
                         enemies[i].y = 3;
 
                         pthread_mutex_lock(&lock_lifes); 
                         enemies[i].lifes = enemies_lifes[i];
                         pthread_mutex_unlock(&lock_lifes); 
 
-                        enemies[i].page = old;
+                        enemies[i].page = page;
                         enemies[i].number = i + 1;
                         enemies[i].killed = 0;
 
@@ -164,10 +151,10 @@ int all_inactive()
     for (int i = 0; i < MAX_ENEMIES - 1; i++)
     {
         if (enemies[i].active)
-            return false;
+            return 0;
     }
 
-    return true;
+    return 1;
 }
 
 void* rr_scheduling(void* arg) 
@@ -179,26 +166,23 @@ void* rr_scheduling(void* arg)
     lifes[3] = 15;
 
     enemies[MAX_ENEMIES - 1].active = 0;
-    big_enemy = 0; 
-    int time_slice = 10;
-    int time = time_slice;
+    big_enemy = 0;
+    int time_slice = (rand() % 5) + 8;
     int index_enemies_lifes = 0;
 
-    while (!spaceShip->game_over) {
+    while (!spaceShip->game_over) 
+    {
         if (!big_enemy)
         {
-            for (int i = 0; i < 3; i++) 
+            for (int i = 0; i < 3; i++)
             {
-                if (spaceShip->game_over)
-                    break;
-
-                if (lifes[i] <= time) 
+                int burst_time = (rand() % lifes[i]) + 1;
+                if (burst_time <= time_slice) 
                 {
-                    if (i != 0)
-                        time -= lifes[i];
+                    if (spaceShip->game_over)
+                        break;
 
-                    else
-                        time -= 4;
+                    time_slice -= burst_time;
 
                     pthread_mutex_lock(&lock_lifes); 
                     enemies_lifes[index_enemies_lifes] = lifes[i];
@@ -210,10 +194,10 @@ void* rr_scheduling(void* arg)
                     if (index_enemies_lifes == MAX_ENEMIES - 1)
                         index_enemies_lifes = 0;
                 } 
-
+                
                 else 
-                    time = time_slice;          
-            }
+                    time_slice = (rand() % 5) + 8;  
+            } 
         }
 
         else 

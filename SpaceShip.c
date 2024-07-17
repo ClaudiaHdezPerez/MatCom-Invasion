@@ -1,18 +1,4 @@
-#include <ncursesw/ncurses.h>
-#include <pthread.h>
-#include <unistd.h>
-
-pthread_mutex_t lock_spaceShip;
-
-typedef struct SpaceShip
-{
-    int x;
-    int y;
-    int lifes;
-    int game_over;
-} SpaceShip;
-
-pthread_mutex_t lock;
+#include "Utils.h"
 
 void draw_spaceShip(SpaceShip *spaceShip)
 {
@@ -38,7 +24,79 @@ void erase_spaceShip(SpaceShip *spaceShip)
     pthread_mutex_unlock(&lock); // Desbloquea el mutex después de dibujar
 }
 
-void draw_lifes(SpaceShip *spaceShip, int max_x, int max_y)
+void* move_spaceShip(void* arg)
+{
+    SpaceShip *spaceShip = (SpaceShip*) arg;  
+
+    int max_x, max_y;
+    getmaxyx(stdscr, max_y, max_x);
+
+    while (!spaceShip->game_over)
+    {
+        int new_x, new_y;
+        getmaxyx(stdscr, new_y, new_x);
+
+        if (new_y != max_y || new_x != max_x)
+        {
+            max_x = new_x;
+            max_y = new_y;   
+
+            erase_spaceShip(spaceShip);
+
+            pthread_mutex_lock(&lock_spaceShip);
+            spaceShip->x = max_x / 2;
+            spaceShip->y = max_y - 3;  
+            pthread_mutex_unlock(&lock_spaceShip);
+
+            draw_spaceShip(spaceShip);    
+        }
+
+        int y = spaceShip->y;
+        int x = spaceShip->x;
+
+        int ch = getch();
+        if (ch != ERR) // Solo procesa la entrada si se presionó una tecla
+        {  
+            pthread_mutex_lock(&lock_spaceShip);
+            switch(ch) 
+            {
+                case KEY_UP:
+                    y = y > (max_y / 2) + 5 ? y - 1 : y;
+                    break;
+                case KEY_DOWN:
+                    y = y < (max_y - 3) ? y + 1 : y;
+                    break;
+                case KEY_LEFT:
+                    x = x > 3 ? x - 1 : x;
+                    break;
+                case KEY_RIGHT:
+                    x = x < (max_x - 7) ? x + 1 : x;
+                    break;
+                case 27:
+                    spaceShip->game_over = 1;
+                    break;
+                case ' ':
+                    fire_bullet(spaceShip, spaceShip->x + 2, spaceShip->y - 1);
+                    break;
+            }
+
+            pthread_mutex_unlock(&lock_spaceShip);
+
+            erase_spaceShip(spaceShip);
+
+            pthread_mutex_lock(&lock_spaceShip);
+            spaceShip->y = y;
+            spaceShip->x = x;
+            pthread_mutex_unlock(&lock_spaceShip);
+
+            draw_spaceShip(spaceShip);
+        }     
+    }
+    
+    pthread_exit(NULL);
+}
+
+void draw_lifes(SpaceShip *spaceShip, int max_x)
 {
     pthread_mutex_lock(&lock); // Desbloquea el mutex después de dibujar
     mvprintw(1, max_x - 17, "%s", "LIFES");
@@ -93,5 +151,5 @@ void die(SpaceShip *spaceShip, int max_x, int max_y)
     }
 
     spaceShip->lifes--;
-    draw_lifes(spaceShip, max_x, max_y);
+    draw_lifes(spaceShip, max_x);
 }
